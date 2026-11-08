@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OllaLite</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍲%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f8f7f4;--side:#efede8;--card:#fff;--line:#e2dfd8;--fg:#1f1e1c;--mut:#76726a;--acc:#c4521a;--accf:#fff;--soft:#f6e3d6;--ok:#2e7d4f;--bad:#b42318;--code:#f3f1ec;--user:#ebe8e1;--ins:rgba(46,125,79,.14);--del:rgba(180,35,24,.12);color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#171614;--side:#1e1d1a;--card:#23221f;--line:#34322d;--fg:#ebe9e4;--mut:#9c988f;--acc:#ec7d43;--accf:#1a0f08;--soft:#3a261a;--ok:#62c48a;--bad:#f2766b;--code:#121110;--user:#2b2a26;--ins:rgba(98,196,138,.16);--del:rgba(242,118,107,.16);color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:grid;grid-template-columns:240px minmax(0,1fr);background:var(--bg);color:var(--fg);font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+pre,code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+aside{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:12px;gap:6px;min-height:0;height:100vh}
+.brand{display:flex;align-items:center;justify-content:space-between;font-weight:650;font-size:15px;padding:2px 4px 6px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--mut)}.dot.on{background:var(--ok)}.dot.off{background:var(--bad)}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-top:8px;display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.list{flex:1;overflow:auto;min-height:60px}
+.chat{display:flex;align-items:center;gap:4px;padding:5px 8px;border-radius:8px;cursor:pointer}
+.chat span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat:hover{background:var(--user)}.chat.on{background:var(--card);box-shadow:0 0 0 1px var(--line)}
+.chat .x{visibility:hidden}.chat:hover .x{visibility:visible}
+.mem{display:flex;flex-direction:column;gap:6px;max-height:32vh;overflow:auto}
+.memrow{display:flex;justify-content:space-between;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12.5px}
+.memrow>div{min-width:0;overflow-wrap:anywhere}.memrow .link{flex:none}
+.sfoot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);padding:4px}
+.small{font-size:12px}.mut{color:var(--mut)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--mut)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--accf);font-weight:600}
+.btn.wide{width:100%}
+.link{border:0;background:none;color:var(--acc);cursor:pointer;padding:2px 4px;font-size:12.5px}
+.icon{border:0;background:none;cursor:pointer;font-size:17px;padding:4px 6px;border-radius:6px;line-height:1}
+.icon:hover{background:var(--user)}
+main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100vh}
+header{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#menu{display:none}
+select,input,textarea{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 9px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--acc)}
+#model{max-width:230px}
+.tg{display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;user-select:none}
+.tg.off{opacity:.4;cursor:default}
+.tg input{accent-color:var(--acc);margin:0}
+nav{margin-left:auto;display:flex;gap:2px;background:var(--side);padding:3px;border-radius:9px}
+nav button{border:0;background:none;padding:4px 11px;border-radius:7px;cursor:pointer;color:var(--mut)}
+nav button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tab{display:none;flex:1;min-height:0}.tab.on{display:flex;flex-direction:column}
+#log{flex:1;overflow-y:auto;padding:20px max(16px,calc((100% - 820px)/2)) 12px}
+.msg{margin:0 0 16px;display:flex;flex-direction:column}
+.user{align-self:flex-end;background:var(--user);padding:8px 13px;border-radius:14px 14px 4px 14px;max-width:85%;white-space:pre-wrap;word-wrap:break-word}
+.user img{max-width:160px;max-height:160px;border-radius:8px;display:block;margin-bottom:6px}
+.bot .think{order:0}.bot .md{order:1}.bot .tool{order:2}.bot .stats{order:3}
+.md{word-wrap:break-word}.md>:first-child{margin-top:0}.md>:last-child{margin-bottom:0}
+.md p{margin:0 0 10px}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:14px 0 6px;line-height:1.3}
+.md h1{font-size:1.35em}.md h2{font-size:1.2em}.md h3{font-size:1.08em}.md h4,.md h5,.md h6{font-size:1em}
+.md ul,.md ol{margin:0 0 10px;padding-left:22px}
+.md code{background:var(--code);padding:1px 5px;border-radius:5px}
+.md blockquote{margin:0 0 10px;padding-left:10px;border-left:3px solid var(--line);color:var(--mut)}
+.md hr{border:0;border-top:1px solid var(--line)}
+.md a{color:var(--acc)}
+.tw{overflow-x:auto;margin:0 0 10px}
+.md table{border-collapse:collapse;font-size:13px}
+.md th,.md td{border:1px solid var(--line);padding:4px 9px;text-align:left}
+.md th{background:var(--side)}
+.code{border:1px solid var(--line);border-radius:9px;margin:0 0 10px;overflow:hidden;background:var(--code)}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:3px 6px 3px 11px;font-size:11.5px;color:var(--mut);border-bottom:1px solid var(--line)}
+.code pre{margin:0;padding:10px 12px;overflow-x:auto}
+.code code{background:none;padding:0}
+.cp{border:0;background:none;color:var(--mut);cursor:pointer;font-size:11.5px}
+.think{margin-bottom:8px;font-size:13px;color:var(--mut)}
+.think summary{cursor:pointer;user-select:none}
+.tbody{white-space:pre-wrap;border-left:2px solid var(--line);padding:4px 0 4px 10px;margin-top:4px;max-height:260px;overflow:auto}
+.tool{border:1px solid var(--line);border-radius:9px;background:var(--card);margin:6px 0;font-size:13px}
+.tool summary{display:flex;gap:8px;align-items:center;padding:6px 10px;cursor:pointer;list-style:none}
+.tool summary::-webkit-details-marker{display:none}
+.tool .sum{flex:1;min-width:0;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.tool .st{font-size:11.5px;color:var(--mut);white-space:nowrap}
+.tool.ok .st{color:var(--ok)}.tool.err .st{color:var(--bad)}
+.tool.need{border-color:var(--acc);box-shadow:0 0 0 3px var(--soft)}
+.tool pre{margin:0;padding:8px 10px;border-top:1px solid var(--line);max-height:320px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.args>.mut{padding:6px 10px;font-size:12px;border-top:1px solid var(--line)}
+.diff del,.diff ins{display:block;text-decoration:none;padding:2px 6px;border-radius:4px;white-space:pre-wrap}
+.diff del{background:var(--del)}.diff ins{background:var(--ins);margin-top:4px}
+.ask{display:flex;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid var(--line);flex-wrap:wrap}
+.ask span{flex:1;font-weight:600}
+.stats{font-size:11.5px;color:var(--mut);margin-top:4px}
+.err{border:1px solid var(--bad);color:var(--bad);border-radius:9px;padding:8px 12px;margin-bottom:14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.welcome{text-align:center;margin-top:11vh;color:var(--mut)}
+.welcome h2{color:var(--fg);font-weight:600;margin:0 0 4px;font-size:22px}
+.sugs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
+.sugs button{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:6px 12px;cursor:pointer;font-size:13px}
+.sugs button:hover{border-color:var(--acc)}
+#composer{padding:8px max(16px,calc((100% - 820px)/2)) 10px}
+#composer .row{display:flex;gap:6px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px;margin:0}
+#composer .row:focus-within{border-color:var(--acc)}
+#input{flex:1;border:0;resize:none;max-height:220px;padding:6px 4px;background:none}
+.hint{font-size:11.5px;color:var(--mut);padding:4px 6px 0;cursor:pointer;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{display:flex;align-items:center;gap:9px;padding:4px 2px 14px;color:var(--mut);font-size:12.5px}
+.status .dots{display:flex;gap:4px;flex:none}.status .dots i{width:7px;height:7px;border-radius:50%;background:var(--acc);animation:blink 1.2s infinite both}
+.status .dots i:nth-child(2){animation-delay:.2s}.status .dots i:nth-child(3){animation-delay:.4s}
+.status.bad{color:var(--bad)}.status.bad .dots i{background:var(--bad);animation:none;opacity:.6}
+.status .stop{margin-left:auto}
+.warn{border:1px solid #c98a00;background:rgba(201,138,0,.08);border-radius:9px;padding:8px 12px;margin-bottom:14px;font-size:13px}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+#atts{display:flex;gap:8px;margin-bottom:8px}#atts:empty{display:none}
+.att{position:relative}.att img{width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.att button{position:absolute;top:-6px;right:-6px;background:var(--card);border-radius:50%;border:1px solid var(--line);width:18px;height:18px;padding:0;line-height:1;cursor:pointer}
+.pane{overflow:auto;padding:18px max(16px,calc((100% - 900px)/2));flex:1}
+.pane h3{font-size:14px;margin:24px 0 8px}.pane h3:first-child{margin-top:0}
+.pane h3 small{font-weight:400;color:var(--mut);font-family:ui-monospace,Menlo,monospace;margin-left:6px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.row input{flex:1;min-width:0}
+.tblw{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+.t th{text-align:left;font-weight:500;color:var(--mut);font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}
+.t td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.t .acts{white-space:nowrap;text-align:right}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;background:var(--side);margin:1px 3px 1px 0;color:var(--mut)}
+.bar{height:6px;background:var(--side);border-radius:4px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.out{background:var(--code);border:1px solid var(--line);border-radius:9px;padding:10px 12px;white-space:pre-wrap;word-break:break-word;max-height:60vh;overflow:auto;margin:8px 0 0}
+.term{min-height:240px}
+#modelfile{width:100%;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:3px 9px;cursor:pointer;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.chips button:hover{border-color:var(--acc)}
+.prompt{font-family:ui-monospace,Menlo,monospace;color:var(--mut)}
+.form label{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;font-size:13px;color:var(--mut)}
+.form label>*{color:var(--fg)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:7px 14px;border-radius:9px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#toast.on{opacity:1}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);max-width:min(820px,94vw);width:100%;padding:16px}
+dialog h3{margin:0 0 10px}
+dialog pre{white-space:pre-wrap;max-height:65vh;overflow:auto;background:var(--code);padding:10px;border-radius:8px}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+@media (max-width:760px){
+ body{grid-template-columns:1fr}
+ aside{position:fixed;inset:0 auto 0 0;width:270px;z-index:10;transform:translateX(-100%);transition:transform .2s}
+ aside.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.3)}
+ #menu{display:block}
+ header{gap:8px;padding:8px 10px}
+ nav{margin-left:0;width:100%}nav button{flex:1}
+ .grid3{grid-template-columns:1fr}
+ #model{max-width:46vw}
+}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="brand"><span>🍲 OllaLite</span><span id="conn" class="dot" title="Ollama"></span></div>
+  <button class="btn wide" id="newChat">＋ Nuevo chat</button>
+  <div class="label">Conversaciones</div>
+  <div id="chats" class="list"></div>
+  <div class="label">En memoria <button class="link" id="refreshPs" title="Actualizar">↻</button></div>
+  <div id="mem" class="mem"></div>
+  <div class="sfoot"><span id="selfmem" title="RAM que usa OllaLite"></span><button class="link" id="quit">Salir</button></div>
+</aside>
+<main>
+  <header>
+    <button class="icon" id="menu" aria-label="Menú">☰</button>
+    <select id="model" title="Modelo"></select>
+    <label class="tg" title="Herramientas: archivos, comandos, búsqueda, web"><input type="checkbox" id="optTools" aria-label="Tools"><span>Tools</span></label>
+    <label class="tg" title="Razonamiento (modelos con thinking)"><input type="checkbox" id="optThink" aria-label="Pensar"><span>Pensar</span></label>
+    <label class="tg" title="Escribir archivos y ejecutar comandos sin pedir permiso"><input type="checkbox" id="optAuto" aria-label="Auto-aprobar"><span>Auto</span></label>
+    <nav id="tabs"><button data-tab="chat" class="on">Chat</button><button data-tab="models">Modelos</button><button data-tab="console">Consola</button><button data-tab="settings">Ajustes</button></nav>
+  </header>
+
+  <section id="tab-chat" class="tab on">
+    <div id="log"></div>
+    <form id="composer" autocomplete="off">
+      <div id="atts"></div>
+      <div class="row">
+        <button type="button" class="icon" id="attach" title="Adjuntar imagen" hidden>📎</button>
+        <input type="file" id="file" accept="image/*" multiple hidden>
+        <textarea id="input" rows="1" placeholder="Escribe un mensaje…" title="Enter envía · Shift+Enter nueva línea · pega imágenes con Cmd+V (modelos con visión)"></textarea>
+        <button class="btn pri" id="send">Enviar</button>
+      </div>
+      <span class="hint" id="cwdHint" title="Carpeta de trabajo de las tools (cámbiala en Ajustes)"></span>
+    </form>
+  </section>
+
+  <section id="tab-models" class="tab">
+    <div class="pane">
+      <h3>Descargar o subir modelo <small>ollama pull / push</small></h3>
+      <div class="row"><input id="pullName" placeholder="ej. qwen3:8b · gemma3:4b · llama3.2 · usuario/modelo"><button class="btn pri" id="pullBtn">Descargar</button><button class="btn" id="pushBtn">Subir</button></div>
+      <div id="pullBox" hidden><div class="bar"><i id="pullBar"></i></div><div class="mut small" id="pullTxt"></div></div>
+      <h3>Instalados <small>ollama list</small></h3>
+      <div class="tblw"><table class="t" id="modelsTbl"></table></div>
+      <h3>Cargados en memoria <small>ollama ps</small></h3>
+      <div class="tblw"><table class="t" id="psTbl"></table></div>
+      <h3>Crear modelo desde Modelfile <small>ollama create</small></h3>
+      <div class="row"><input id="createName" placeholder="nombre-del-modelo"><button class="btn pri" id="createBtn">Crear</button></div>
+      <textarea id="modelfile" class="mono" rows="7" spellcheck="false">FROM qwen3:8b
+PARAMETER num_ctx 8192
+PARAMETER temperature 0.6
+SYSTEM """Eres un asistente experto. Responde siempre en español."""</textarea>
+      <pre id="createOut" class="out" hidden></pre>
+    </div>
+  </section>
+
+  <section id="tab-console" class="tab">
+    <div class="pane">
+      <div class="chips" id="chips"></div>
+      <form class="row" id="conForm" autocomplete="off"><span class="prompt">$ ollama</span><input id="conIn" class="mono" placeholder="list" spellcheck="false"><button class="btn pri" id="conRun">Ejecutar</button><button type="button" class="btn" id="conClear">Limpiar</button></form>
+      <pre id="conOut" class="out term"></pre>
+    </div>
+  </section>
+
+  <section id="tab-settings" class="tab">
+    <div class="pane form">
+      <label>Carpeta de trabajo de las tools <input id="setCwd" class="mono" spellcheck="false"></label>
+      <label>Instrucciones del sistema (se añaden a las de OllaLite) <textarea id="setSystem" rows="4"></textarea></label>
+      <div class="grid3">
+        <label>Contexto · num_ctx <input id="setCtx" type="number" min="512" step="1024" placeholder="por defecto del modelo"></label>
+        <label>Temperatura <input id="setTemp" type="number" min="0" max="2" step="0.1" placeholder="por defecto"></label>
+        <label>Mantener en RAM · keep_alive <input id="setKeep" placeholder="5m · -1 siempre · 0 liberar al terminar"></label>
+      </div>
+      <p class="mut small">Más contexto = más RAM para el modelo (caché KV). Con tools se recomienda 8192 o más. keep_alive 0 libera la RAM apenas termina cada respuesta.</p>
+      <p class="mut small" id="about"></p>
+      <div class="row"><button class="btn" id="clearAll">Borrar todos los chats</button><button class="btn" id="quit2">Cerrar OllaLite</button></div>
+    </div>
+  </section>
+</main>
+<dialog id="dlg"><form method="dialog"><h3 id="dlgT"></h3><pre id="dlgB"></pre><button class="btn">Cerrar</button></form></dialog>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const TOKEN = "__TOKEN__";
+const $ = s => document.querySelector(s);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } }
+};
+const fmtB = n => { if (!n) return "0 B"; const u = ["B", "KB", "MB", "GB", "TB"], i = Math.min(4, Math.floor(Math.log(n) / Math.log(1024))); return (n / 1024 ** i).toFixed(i > 1 ? 1 : 0) + " " + u[i]; };
+let toastT;
+function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 3200); }
+
+// ---------- API ----------
+async function req(path, body, method, signal) {
+  const r = await fetch(path, { method: method || (body === undefined ? "GET" : "POST"), headers: { "X-Token": TOKEN, "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), signal });
+  if (!r.ok) { let m = r.status + " " + r.statusText; try { const t = await r.text(); try { m = JSON.parse(t).error || t; } catch { m = t || m; } } catch {} throw new Error(m.trim()); }
+  return r;
+}
+async function oj(p, body, method) { const t = await (await req("/ollama/api/" + p, body, method)).text(); return t ? JSON.parse(t) : {}; }
+async function* ndjson(r) {
+  const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "";
+  for (;;) {
+    const { value, done } = await rd.read(); if (done) break;
+    buf += dec.decode(value, { stream: true }); let i;
+    while ((i = buf.indexOf("\n")) >= 0) { const l = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (l) { try { yield JSON.parse(l); } catch {} } }
+  }
+  if (buf.trim()) { try { yield JSON.parse(buf); } catch {} }
+}
+
+// ---------- estado ----------
+const S = Object.assign({ cwd: "", system: "", ctx: 8192, temp: "", keep: "", tools: true, think: false, model: "" }, store.get("ol.settings", {}));
+const saveS = () => store.set("ol.settings", S);
+let info = {}, models = [], caps = {}, chats = store.get("ol.chats", []), chat = null;
+let busy = false, gotDone = false, ctrl = null, cur = null, last = null, cards = {}, openCalls = [], atts = [], rafQ = false;
+
+// ---------- markdown mínimo y seguro (todo se escapa antes) ----------
+function inl(s) {
+  const codes = [];
+  s = esc(s).replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return "\u0000" + (codes.length - 1) + "\u0000"; });
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[\s(])\*([^*\s][^*]*)\*(?=[\s).,;:!?]|$)/g, "$1<i>$2</i>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/(^|\s)(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
+  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => "<code>" + codes[+i] + "</code>");
+}
+function blocks(t) {
+  if (!t.trim()) return "";
+  const L = t.split("\n"); let h = "", para = [], list = null, m;
+  const fp = () => { if (para.length) { h += "<p>" + para.map(inl).join("<br>") + "</p>"; para = []; } };
+  const fl = () => { if (list) { h += `</${list}>`; list = null; } };
+  for (let i = 0; i < L.length; i++) {
+    const l = L[i];
+    if (!l.trim()) { fp(); fl(); continue; }
+    if ((m = l.match(/^\s{0,3}(#{1,6})\s+(.*)$/))) { fp(); fl(); const n = m[1].length; h += `<h${n}>${inl(m[2])}</h${n}>`; continue; }
+    if (/^\s{0,3}([-*_])(\s*\1){2,}\s*$/.test(l)) { fp(); fl(); h += "<hr>"; continue; }
+    if (l.includes("|") && /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(L[i + 1] || "")) {
+      fp(); fl();
+      const row = s => s.trim().replace(/^\||\|$/g, "").split("|").map(c => inl(c.trim()));
+      h += '<div class="tw"><table><tr>' + row(l).map(c => `<th>${c}</th>`).join("") + "</tr>";
+      for (i += 2; i < L.length && L[i].includes("|") && L[i].trim(); i++) h += "<tr>" + row(L[i]).map(c => `<td>${c}</td>`).join("") + "</tr>";
+      i--; h += "</table></div>"; continue;
+    }
+    if ((m = l.match(/^\s*([-*+]|\d+[.)])\s+(.*)$/))) { fp(); const tag = /\d/.test(m[1]) ? "ol" : "ul"; if (list !== tag) { fl(); h += `<${tag}>`; list = tag; } h += `<li>${inl(m[2])}</li>`; continue; }
+    if ((m = l.match(/^\s*>\s?(.*)$/))) { fp(); fl(); h += `<blockquote>${inl(m[1])}</blockquote>`; continue; }
+    fl(); para.push(l);
+  }
+  fp(); fl(); return h;
+}
+function md(src) {
+  let out = "", i = 0, m;
+  const re = /```([^\n`]*)\n?([\s\S]*?)(```|$)/g;
+  while ((m = re.exec(src))) {
+    out += blocks(src.slice(i, m.index));
+    out += `<div class="code"><div class="ch"><span>${esc(m[1].trim())}</span><button class="cp" type="button">copiar</button></div><pre><code>${esc(m[2].replace(/\n$/, ""))}</code></pre></div>`;
+    i = re.lastIndex;
+    if (!m[3] || i >= src.length) break;
+  }
+  return out + blocks(src.slice(i));
+}
+
+// ---------- modelos ----------
+async function loadModels() {
+  try { const d = await oj("tags"); models = (d.models || []).sort((a, b) => a.name.localeCompare(b.name)); setConn(true); }
+  catch (e) { models = []; setConn(false); }
+  for (const m of models) if (m.capabilities) caps[m.name] = m.capabilities;
+  const sel = $("#model"); sel.textContent = "";
+  for (const m of models) { const o = el("option", "", m.name); o.value = m.name; sel.append(o); }
+  if (!models.length) { const o = el("option", "", "— sin modelos —"); o.value = ""; sel.append(o); }
+  if (!models.some(m => m.name === S.model)) S.model = (models.find(m => (m.capabilities || []).includes("tools")) || models[0] || {}).name || "";
+  sel.value = S.model;
+  await updateCaps();
+  renderModels();
+}
+async function updateCaps() {
+  const m = S.model, t = $("#optTools"), th = $("#optThink");
+  if (m && !caps[m]) { try { caps[m] = (await oj("show", { model: m })).capabilities || []; } catch { caps[m] = []; } }
+  const c = caps[m] || [];
+  t.disabled = !c.includes("tools"); th.disabled = !c.includes("thinking");
+  t.checked = S.tools && !t.disabled; th.checked = S.think && !th.disabled;
+  t.parentElement.classList.toggle("off", t.disabled); th.parentElement.classList.toggle("off", th.disabled);
+  t.parentElement.title = t.disabled ? "Este modelo no soporta tools" : "Herramientas: archivos, comandos, búsqueda, web";
+  $("#attach").hidden = !c.includes("vision");
+}
+async function selectModel(n) { S.model = n; saveS(); $("#model").value = n; await updateCaps(); }
+function setConn(ok) { const d = $("#conn"); d.className = "dot " + (ok ? "on" : "off"); d.title = ok ? "Ollama conectado" : "Ollama no responde"; }
+
+function renderModels() {
+  const t = $("#modelsTbl");
+  t.innerHTML = "<tr><th>Modelo</th><th>Tamaño</th><th>Detalles</th><th>Capacidades</th><th></th></tr>";
+  if (!models.length) { t.insertAdjacentHTML("beforeend", '<tr><td colspan="5" class="mut">No hay modelos. Descarga uno arriba (ej. qwen3:8b).</td></tr>'); return; }
+  for (const m of models) {
+    const d = m.details || {}, tr = el("tr");
+    tr.innerHTML = `<td><b>${esc(m.name)}</b></td><td>${fmtB(m.size)}</td><td class="mut">${esc([d.parameter_size, d.quantization_level, d.format, d.runner].filter(Boolean).join(" · "))}</td><td>${(m.capabilities || []).map(c => `<span class="tag">${esc(c)}</span>`).join("")}</td>`;
+    const td = el("td", "acts");
+    const mk = (label, fn, title) => { const b = el("button", "link", label); b.title = title || ""; b.onclick = fn; td.append(b); };
+    mk("usar", () => { selectModel(m.name); showTab("chat"); }, "Usar en el chat");
+    mk("cargar", () => preload(m.name), "Precargar en RAM");
+    mk("info", () => showInfo(m.name), "ollama show");
+    mk("copiar", () => copyModel(m.name), "ollama cp");
+    mk("eliminar", () => delModel(m), "ollama rm");
+    tr.append(td); t.append(tr);
+  }
+}
+async function loadPs() {
+  let d;
+  try { d = await oj("ps"); setConn(true); } catch { setConn(false); return; }
+  const ms = d.models || [], mem = $("#mem"), t = $("#psTbl");
+  mem.textContent = "";
+  t.innerHTML = "<tr><th>Modelo</th><th>RAM</th><th>GPU</th><th>Contexto</th><th>Expira</th><th></th></tr>";
+  if (!ms.length) { mem.append(el("div", "mut small", "Ningún modelo cargado")); t.insertAdjacentHTML("beforeend", '<tr><td colspan="6" class="mut">Ningún modelo en memoria.</td></tr>'); }
+  for (const m of ms) {
+    const gpu = m.size ? Math.round((m.size_vram || 0) / m.size * 100) + "%" : "–";
+    const exp = m.expires_at ? new Date(m.expires_at) : null;
+    const expTxt = !exp ? "–" : exp.getFullYear() > 2200 ? "nunca" : exp.toLocaleTimeString();
+    const row = el("div", "memrow");
+    row.innerHTML = `<div><b>${esc(m.name)}</b><div class="mut small">${fmtB(m.size)} · GPU ${gpu}${m.context_length ? " · ctx " + m.context_length : ""}</div></div>`;
+    const b = el("button", "link", "liberar"); b.title = "ollama stop " + m.name; b.onclick = () => unload(m.name); row.append(b); mem.append(row);
+    const tr = el("tr");
+    tr.innerHTML = `<td><b>${esc(m.name)}</b></td><td>${fmtB(m.size)}</td><td>${gpu}</td><td>${m.context_length || "–"}</td><td>${esc(expTxt)}</td>`;
+    const td = el("td", "acts"), b2 = el("button", "link", "liberar RAM"); b2.onclick = () => unload(m.name); td.append(b2); tr.append(td); t.append(tr);
+  }
+}
+async function unload(name) { try { await oj("generate", { model: name, keep_alive: 0 }); toast(name + " liberado de la RAM"); } catch (e) { toast(e.message); } setTimeout(loadPs, 300); }
+async function preload(name) { toast("Cargando " + name + "…"); try { await oj("generate", { model: name, keep_alive: keepVal() ?? "5m" }); toast(name + " cargado"); } catch (e) { toast(e.message); } loadPs(); }
+async function copyModel(name) {
+  const dst = prompt(`Copiar ${name} como:`, name.split(":")[0] + "-copia"); if (!dst) return;
+  try { await oj("copy", { source: name, destination: dst.trim() }); toast("Copiado como " + dst); loadModels(); } catch (e) { toast(e.message); }
+}
+async function delModel(m) {
+  if (!confirm(`¿Eliminar ${m.name}? Se borran ${fmtB(m.size)} del disco y no se puede deshacer.`)) return;
+  try { await oj("delete", { model: m.name }, "DELETE"); toast(m.name + " eliminado"); loadModels(); } catch (e) { toast(e.message); }
+}
+async function showInfo(name) {
+  try {
+    const d = await oj("show", { model: name }), mi = d.model_info || {}, det = d.details || {};
+    let t = `Capacidades: ${(d.capabilities || []).join(", ") || "–"}\nFormato: ${det.format || "–"} · Familia: ${det.family || "–"} · Parámetros: ${det.parameter_size || "–"} · Cuantización: ${det.quantization_level || "–"}\n`;
+    for (const k of Object.keys(mi).filter(k => /general\.(architecture|parameter_count|basename|size_label)|context_length|embedding_length|block_count/.test(k))) t += `${k}: ${mi[k]}\n`;
+    if (d.parameters) t += `\n— Parámetros —\n${d.parameters}\n`;
+    if (d.system) t += `\n— System —\n${d.system}\n`;
+    if (d.template) t += `\n— Template —\n${d.template.slice(0, 3000)}\n`;
+    if (d.license) t += `\n— Licencia —\n${d.license.slice(0, 1200)}${d.license.length > 1200 ? "…" : ""}\n`;
+    $("#dlgT").textContent = name; $("#dlgB").textContent = t; $("#dlg").showModal();
+  } catch (e) { toast(e.message); }
+}
+let pullCtrl = null;
+async function pullPush(kind) {
+  const btn = kind === "pull" ? $("#pullBtn") : $("#pushBtn"), label = kind === "pull" ? "Descargar" : "Subir";
+  if (pullCtrl) { pullCtrl.abort(); return; }
+  const name = $("#pullName").value.trim(); if (!name) return toast("Escribe el nombre del modelo");
+  pullCtrl = new AbortController(); btn.textContent = "Cancelar"; $("#pullBox").hidden = false;
+  const bar = $("#pullBar"), txt = $("#pullTxt"); let lt = 0, lc = 0, spd = 0;
+  try {
+    const r = await req("/ollama/api/" + kind, { model: name, stream: true }, "POST", pullCtrl.signal);
+    for await (const e of ndjson(r)) {
+      if (e.error) throw new Error(e.error);
+      const now = performance.now();
+      if (e.completed != null) { if (e.completed < lc) lc = 0; if (now - lt > 1000) { if (lt) spd = (e.completed - lc) / ((now - lt) / 1000); lt = now; lc = e.completed; } }
+      const pct = e.total ? (e.completed || 0) / e.total * 100 : 0;
+      bar.style.width = pct + "%";
+      txt.textContent = e.status + (e.total ? ` · ${fmtB(e.completed || 0)} / ${fmtB(e.total)} (${pct.toFixed(1)}%)${spd > 0 ? " · " + fmtB(spd) + "/s" : ""}` : "");
+    }
+    bar.style.width = "100%"; txt.textContent = "✓ " + name + (kind === "pull" ? " descargado" : " subido"); loadModels();
+  } catch (e) { txt.textContent = e.name === "AbortError" ? "Cancelado" : "Error: " + e.message; }
+  pullCtrl = null; btn.textContent = label;
+}
+
+// ---------- texto en streaming (consola / create) ----------
+const ANSI = /\x1b\[[0-9;?]*[ -\/]*[@-~]|\x1b\][^\x07]*\x07|\x1b[=>()][0-9A-Za-z]?/g;
+const cleanTerm = t => t.replace(ANSI, "").replace(/\r\n/g, "\n").split("\n").map(l => {
+  l = l.split("\r").filter(Boolean).pop() || "";
+  return /[⠀-⣿\b]/.test(l) ? l.replace(/[⠀-⣿\b]/g, "").trimStart() : l; // quita el spinner de ollama
+}).join("\n");
+async function streamInto(pre, body, signal, prefix = "") {
+  let text = prefix, q = false;
+  const paint = () => { q = false; if (text.length > 300000) text = text.slice(-200000); pre.textContent = cleanTerm(text); pre.scrollTop = pre.scrollHeight; };
+  try {
+    const r = await req("/api/exec", body, "POST", signal), rd = r.body.getReader(), dec = new TextDecoder();
+    for (;;) { const { value, done } = await rd.read(); if (done) break; text += dec.decode(value, { stream: true }); if (!q) { q = true; requestAnimationFrame(paint); } }
+  } catch (e) { text += e.name === "AbortError" ? "\n[detenido]\n" : "\n[error] " + e.message + "\n"; }
+  paint(); return text;
+}
+let conCtrl = null, conText = "";
+async function runConsole(args) {
+  if (conCtrl) { conCtrl.abort(); return; }
+  args = args.trim().replace(/^ollama\s+/, ""); if (!args) return;
+  conCtrl = new AbortController(); $("#conRun").textContent = "Detener";
+  conText = await streamInto($("#conOut"), { args }, conCtrl.signal, conText ? conText + "\n" : "");
+  conCtrl = null; $("#conRun").textContent = "Ejecutar";
+  if (/^(pull|rm|cp|create|push)\b/.test(args)) loadModels();
+  loadPs();
+}
+async function createModel() {
+  const name = $("#createName").value.trim(); if (!name) return toast("Ponle un nombre al modelo");
+  const out = $("#createOut"); out.hidden = false;
+  await streamInto(out, { args: "create " + JSON.stringify(name), modelfile: $("#modelfile").value });
+  loadModels();
+}
+
+// ---------- chats ----------
+function saveChats() {
+  chats.sort((a, b) => b.ts - a.ts); if (chats.length > 100) chats.length = 100;
+  if (!store.set("ol.chats", chats)) store.set("ol.chats", chats.map(c => ({ ...c, h: c.h.map(m => m.images ? { ...m, images: undefined, content: m.content + " [imagen]" } : m) })));
+  renderChatList();
+}
+function renderChatList() {
+  const box = $("#chats"); box.textContent = "";
+  for (const c of chats) {
+    const it = el("div", "chat" + (chat && c.id === chat.id ? " on" : "")), x = el("button", "link x", "×");
+    x.title = "Eliminar chat";
+    x.onclick = ev => { ev.stopPropagation(); if (busy && c === chat) return; chats = chats.filter(o => o !== c); if (chat === c) newChat(); saveChats(); };
+    it.onclick = () => openChat(c);
+    it.append(el("span", "", c.title || "Chat"), x); box.append(it);
+  }
+}
+function newChat() { if (busy) return; chat = { id: Date.now().toString(36), title: "", ts: Date.now(), h: [] }; renderLog(); renderChatList(); closeSide(); $("#input").focus(); }
+function openChat(c) { if (busy) return; chat = c; renderLog(); renderChatList(); closeSide(); }
+
+// ---------- render del chat ----------
+const ICON = { read_file: "📄", write_file: "✍️", edit_file: "✏️", list_dir: "📁", find_files: "🔎", search_text: "🔍", run_command: "⌘", fetch_url: "🌐" };
+const clean = m => { const o = {}; for (const k in m) if (k[0] !== "_" && m[k] !== undefined) o[k] = m[k]; return o; };
+const argObj = a => { if (typeof a === "string") { try { return JSON.parse(a); } catch { return { value: a }; } } return a || {}; };
+function scrollEnd(force) { const l = $("#log"); if (force || l.scrollHeight - l.scrollTop - l.clientHeight < 140) l.scrollTop = l.scrollHeight; }
+
+function welcome() {
+  const w = el("div", "welcome");
+  w.innerHTML = `<h2>¿En qué te ayudo?</h2><div>Chatea con tus modelos locales. Con <b>Tools</b> activado puede leer y crear archivos, ejecutar comandos y buscar en tus carpetas.</div>`;
+  const s = el("div", "sugs");
+  for (const q of ["¿Qué hay en mi Escritorio?", "Busca en mis carpetas los PDF que hablen de matemáticas", "¿Cuánto espacio libre tengo en el disco?", "Crea un script de Python que renombre fotos por fecha"]) {
+    const b = el("button", "", q); b.type = "button"; b.onclick = () => { $("#input").value = q; autosize(); $("#input").focus(); }; s.append(b);
+  }
+  w.append(s); return w;
+}
+function userBubble(m) {
+  const d = el("div", "msg"), u = el("div", "user");
+  for (const im of m.images || []) { const i = el("img"); i.src = "data:image/png;base64," + im; u.append(i); }
+  u.append(document.createTextNode(m.content)); d.append(u); return d;
+}
+function botBlock() { const e = el("div", "msg bot"); return { el: e, text: "", think: "", thinkEl: null, body: null, statsEl: null, stats: null }; }
+function setThink(b, t, open) {
+  if (!b.thinkEl) { const d = el("details", "think"); d.open = open; d.append(el("summary", "", "💭 Razonamiento"), el("div", "tbody")); b.el.append(d); b.thinkEl = d; }
+  b.thinkEl.lastChild.textContent = t;
+}
+function setContent(b, t) { if (!b.body) { b.body = el("div", "md"); b.el.append(b.body); } b.body.innerHTML = md(t); }
+function setStats(b, s) {
+  if (!s) return;
+  if (!b.statsEl) { b.statsEl = el("div", "stats"); b.el.append(b.statsEl); }
+  const tps = s.eval_ms ? (s.eval / (s.eval_ms / 1000)).toFixed(1) : "–";
+  b.statsEl.textContent = `${tps} tok/s · ${s.eval} tokens · prompt ${s.prompt} · ${(s.total_ms / 1000).toFixed(1)} s` + (s.load_ms > 500 ? ` · carga ${(s.load_ms / 1000).toFixed(1)} s` : "");
+}
+function paintBlock(b, live) { if (b.think) { setThink(b, b.think, live); if (!live) b.thinkEl.open = false; } if (b.text) setContent(b, b.text); }
+
+function argView(name, a) {
+  const box = el("div", "args");
+  if (name === "edit_file") {
+    box.append(el("div", "mut", a.path || ""));
+    const p = el("pre", "diff"); p.append(el("del", "", String(a.old_text ?? "")), el("ins", "", String(a.new_text ?? ""))); box.append(p);
+  } else if (name === "write_file") {
+    const c = String(a.content ?? "");
+    box.append(el("div", "mut", `${a.path || ""} · ${c.split("\n").length} líneas`), el("pre", "", c.length > 8000 ? c.slice(0, 8000) + "\n…" : c));
+  } else if (name === "run_command") {
+    box.append(el("pre", "", (a.cwd ? "# en " + a.cwd + "\n" : "") + "$ " + (a.command || "")));
+  } else box.append(el("pre", "", JSON.stringify(a, null, 2)));
+  return box;
+}
+function toolCard(name, args, need, id) {
+  const a = argObj(args), d = el("details", "tool" + (need ? " need" : "")), s = el("summary");
+  const st = el("span", "st", need ? "esperando permiso" : id ? "ejecutando…" : "");
+  s.append(el("span", "", ICON[name] || "🔧"), el("b", "", name), el("span", "sum", String(name === "run_command" ? a.command : /find_files|search_text/.test(name) ? [a.pattern, a.content].filter(Boolean).join(" · ") : name === "fetch_url" ? a.url : a.path || a.command || "").replace(/\s+/g, " ").slice(0, 160)), st);
+  d.append(s, argView(name, a)); d.open = !!need;
+  const card = { el: d, denied: false };
+  let ask = null;
+  if (need) {
+    ask = el("div", "ask");
+    const y = el("button", "btn pri", "Permitir"), n = el("button", "btn", "Rechazar"), all = el("button", "btn", "Permitir siempre");
+    for (const b of [y, n, all]) b.type = "button";
+    ask.append(el("span", "", "¿Ejecutar esta acción?"), y, n, all); d.append(ask);
+    card.approve = async ok => { if (!ask.isConnected) return; ask.remove(); card.denied = !ok; st.textContent = ok ? "ejecutando…" : "rechazado"; wait(true); try { await req("/api/approve", { id, ok }); } catch (e) { toast(e.message); } };
+    y.onclick = () => card.approve(true); n.onclick = () => card.approve(false);
+    all.onclick = () => { $("#optAuto").checked = true; card.approve(true); };
+  }
+  card.done = (out, err) => {
+    if (ask) ask.remove();
+    d.classList.remove("need"); d.classList.add(err ? "err" : "ok"); d.open = false;
+    st.textContent = card.denied || /^The user rejected/.test(out) ? "rechazado" : err ? "error" : "✓";
+    d.append(el("pre", "", out.length > 20000 ? out.slice(0, 20000) + "\n…" : out));
+  };
+  return card;
+}
+function renderLog() {
+  const log = $("#log"); log.textContent = "";
+  if (!chat.h.length) { log.append(welcome()); return; }
+  let q = [];
+  for (const m of chat.h) {
+    if (m.role === "user") log.append(userBubble(m));
+    else if (m.role === "assistant") {
+      const b = botBlock(); log.append(b.el);
+      b.think = m._think || ""; b.text = m.content || ""; paintBlock(b, false); setStats(b, m._stats);
+      q = (m.tool_calls || []).map(tc => { const c = toolCard(tc.function.name, tc.function.arguments, false, null); b.el.append(c.el); return c; });
+    } else if (m.role === "tool") { const c = q.shift(); if (c) c.done(m.content || "", m._err); }
+  }
+  scrollEnd(true);
+}
+function showErr(msg) {
+  const d = el("div", "err"); d.append(el("span", "", msg));
+  if (/conectar|connect|no responde|refused/i.test(msg)) { const b = el("button", "btn", "Iniciar Ollama"); b.type = "button"; b.onclick = startOllama; d.append(b); }
+  $("#log").append(d); scrollEnd(true);
+}
+async function startOllama() {
+  toast("Iniciando Ollama…");
+  try { const r = await (await req("/api/start-ollama", {})).json(); toast(r.ok ? "Ollama listo" : "No se pudo iniciar: " + r.error); if (r.ok) { loadModels(); loadPs(); } } catch (e) { toast(e.message); }
+}
+
+// ---------- enviar y recibir ----------
+// Barra de estado: dice qué está pasando de verdad (lo informa el servidor cada segundo).
+let stEv = null, stAt = 0, lastEv = 0, sentAt = 0;
+const statusEl = el("div", "status");
+statusEl.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span class="stxt"></span>';
+const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace(".0", "") + "k" : String(n || 0);
+function phaseText(e) {
+  if (!e) return "Enviando a OllaLite…";
+  switch (e.p) {
+    case "load": return `Cargando ${S.model} en la RAM…`;
+    case "prompt": return `Leyendo tu mensaje y el historial (~${fmtK(e.est)} tokens)…`;
+    case "think": return `Razonando… ${e.n} fragmentos`;
+    case "write": return `Escribiendo… ${e.n} fragmentos`;
+    case "hidden": return "Generando sin mostrar texto (suele ser el contenido de una herramienta, p. ej. un archivo)…";
+    case "tool": return `Ejecutando ${e.d}…`;
+    case "approval": return "Esperando tu permiso ↑";
+    default: return "Trabajando…";
+  }
+}
+function paintStatus() {
+  const now = Date.now(), idle = (now - lastEv) / 1000, t = statusEl.querySelector(".stxt");
+  const secs = Math.round(stEv ? (stEv.ms + now - stAt) / 1000 : (now - sentAt) / 1000);
+  const bad = busy && idle > 6;
+  statusEl.classList.toggle("bad", bad);
+  t.textContent = bad ? `Sin señal de OllaLite desde hace ${Math.round(idle)} s. Si no cambia, pulsa Detener.` : phaseText(stEv) + (secs >= 1 ? ` · ${secs} s` : "");
+}
+const wait = on => { if (on && busy) { $("#log").append(statusEl); paintStatus(); scrollEnd(); } else statusEl.remove(); };
+const blk = () => { wait(false); if (!cur) { cur = botBlock(); $("#log").append(cur.el); } return cur; };
+function showWarn(msg) { const d = el("div", "warn", "⚠ " + msg); statusEl.isConnected ? statusEl.before(d) : $("#log").append(d); scrollEnd(); }
+setInterval(() => {
+  if (!busy) return;
+  if ((Date.now() - lastEv) / 1000 > 6 && !statusEl.isConnected) wait(true); // vigilancia: el silencio también se muestra
+  if (statusEl.isConnected) paintStatus();
+}, 1000);
+function schedule() { if (rafQ) return; rafQ = true; requestAnimationFrame(() => { rafQ = false; if (cur) { paintBlock(cur, true); scrollEnd(); } }); }
+const keepVal = () => !S.keep ? undefined : /^-?\d+$/.test(S.keep) ? +S.keep : S.keep;
+
+function handle(e) {
+  lastEv = Date.now();
+  switch (e.t) {
+    case "st": {
+      stEv = e; stAt = lastEv;
+      if (e.p === "approval" && e.id && !cards[e.id]) handle({ t: "call", id: e.id, name: e.name, args: e.args, need: true }); // por si la tarjeta no llegó
+      if (e.p === "write" || e.p === "think") { if (statusEl.isConnected) wait(false); } // el texto ya se ve en vivo
+      else if (!statusEl.isConnected) wait(true); else paintStatus();
+      break;
+    }
+    case "warn": showWarn(e.d); break;
+    case "done": gotDone = true; break;
+    case "think": blk().think += e.d; schedule(); break;
+    case "tok": blk().text += e.d; schedule(); break;
+    case "stats": { const b = blk(); b.stats = e.s; setStats(b, e.s); break; }
+    case "msg": {
+      const b = blk(); paintBlock(b, false);
+      const m = e.m; if (b.think) m._think = b.think; if (b.stats) m._stats = b.stats;
+      chat.h.push(m); last = b; cur = null; if (m.tool_calls && m.tool_calls.length) wait(true); break;
+    }
+    case "call": {
+      const c = toolCard(e.name, e.args, e.need, e.id); (last || blk()).el.append(c.el);
+      cards[e.id] = c; openCalls.push({ id: e.id, name: e.name });
+      if (e.need && $("#optAuto").checked) c.approve(true);
+      wait(true);
+      scrollEnd(); break;
+    }
+    case "result": {
+      const m = e.m; m._err = !!e.err; chat.h.push(m);
+      const c = cards[e.id]; if (c) c.done(m.content || "", e.err);
+      openCalls = openCalls.filter(x => x.id !== e.id); wait(true); break;
+    }
+    case "err": wait(false); showErr(e.d); break;
+  }
+}
+function setBusy(b) { busy = b; const s = $("#send"); s.textContent = b ? "Detener" : "Enviar"; s.classList.toggle("pri", !b); }
+
+async function send() {
+  if (busy) { ctrl && ctrl.abort(); return; }
+  const inp = $("#input"), text = inp.value.trim();
+  if (!text && !atts.length) return;
+  if (!S.model) return toast("Elige o descarga un modelo primero (pestaña Modelos)");
+  if (!chat.h.length) { chat.title = (text || "Imagen").slice(0, 60); if (!chats.includes(chat)) chats.unshift(chat); }
+  const um = { role: "user", content: text }; if (atts.length) um.images = atts.map(a => a.b64);
+  chat.h.push(um); chat.ts = Date.now(); chat.model = S.model;
+  inp.value = ""; autosize(); atts = []; renderAtts();
+  if ($("#log .welcome")) $("#log").textContent = "";
+  $("#log").append(userBubble(um)); scrollEnd(true); renderChatList();
+  setBusy(true); ctrl = new AbortController(); cur = null; last = null; cards = {}; openCalls = []; gotDone = false;
+  stEv = null; lastEv = sentAt = Date.now(); wait(true);
+  const options = {}; if (S.ctx) options.num_ctx = +S.ctx; if (S.temp !== "" && S.temp != null) options.temperature = +S.temp;
+  const body = { model: S.model, messages: chat.h.map(clean), system: S.system, tools: $("#optTools").checked, auto: $("#optAuto").checked, options, cwd: S.cwd };
+  if (!$("#optThink").disabled) body.think = $("#optThink").checked;
+  if (keepVal() !== undefined) body.keep_alive = keepVal();
+  try {
+    const r = await req("/api/chat", body, "POST", ctrl.signal);
+    for await (const e of ndjson(r)) handle(e);
+    if (!gotDone) { wait(false); showErr("La conexión con OllaLite se cortó antes de terminar (¿se cerró la app?)."); }
+  } catch (e) { if (e.name !== "AbortError") { wait(false); showErr(/fetch|network|load failed/i.test(e.message) ? "No hay conexión con OllaLite (¿se cerró la app?)." : e.message); } }
+  if (cur && (cur.text || cur.think)) { paintBlock(cur, false); chat.h.push({ role: "assistant", content: cur.text, _think: cur.think || undefined }); }
+  for (const oc of openCalls) { chat.h.push({ role: "tool", content: "Cancelled by the user.", tool_name: oc.name, _err: true }); cards[oc.id] && cards[oc.id].done("Cancelado", true); }
+  cur = null; openCalls = []; setBusy(false); wait(false); saveChats(); loadPs(); loadSelf();
+}
+
+// ---------- adjuntos ----------
+function addFiles(files) {
+  for (const f of files) {
+    if (!f.type.startsWith("image/")) continue;
+    const r = new FileReader();
+    r.onload = () => { atts.push({ url: r.result, b64: String(r.result).split(",")[1] }); renderAtts(); };
+    r.readAsDataURL(f);
+  }
+}
+function renderAtts() {
+  const box = $("#atts"); box.textContent = "";
+  atts.forEach((a, i) => { const t = el("div", "att"), im = el("img"), x = el("button", "", "×"); im.src = a.url; x.type = "button"; x.onclick = () => { atts.splice(i, 1); renderAtts(); }; t.append(im, x); box.append(t); });
+}
+
+// ---------- UI general ----------
+function autosize() { const t = $("#input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 220) + "px"; }
+function showTab(n) {
+  document.querySelectorAll(".tab").forEach(s => s.classList.toggle("on", s.id === "tab-" + n));
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === n));
+  if (n === "models") { loadModels(); loadPs(); }
+  if (n === "settings") loadSelf();
+  if (n === "chat") $("#input").focus();
+  if (n === "console") $("#conIn").focus();
+}
+const tild = p => info.home && p && p.startsWith(info.home) ? "~" + p.slice(info.home.length) : p;
+function updHint() { const p = tild(S.cwd) || "~", h = $("#cwdHint"); h.textContent = "📁 " + (p.length > 70 ? "…" + p.slice(-69) : p); h.title = p + " · carpeta de trabajo de las tools (cámbiala en Ajustes)"; }
+function closeSide() { $("#side").classList.remove("open"); }
+async function loadSelf() {
+  try { info = Object.assign(info, await (await req("/api/info")).json()); } catch { return; }
+  if (info.rss_mb) $("#selfmem").textContent = `App: ${info.rss_mb.toFixed(1)} MB RAM`;
+  $("#about").textContent = `OllaLite ${info.version} · ${info.os}/${info.arch} · Ollama en ${info.ollama} · shell ${info.shell} · esta app usa ${info.rss_mb ? info.rss_mb.toFixed(1) + " MB" : "?"} de RAM (heap Go ${(info.heap_mb || 0).toFixed(1)} MB).`;
+}
+async function quit() {
+  if (!confirm("¿Cerrar OllaLite? Ollama y tus modelos siguen funcionando.")) return;
+  try { await req("/api/quit", {}); } catch {}
+  document.body.innerHTML = '<p style="padding:40px;font:15px system-ui">OllaLite se cerró. Ya puedes cerrar esta pestaña.</p>';
+}
+
+function bindUI() {
+  $("#composer").onsubmit = e => { e.preventDefault(); send(); };
+  $("#input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+  $("#input").addEventListener("input", autosize);
+  $("#input").addEventListener("paste", e => { const f = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith("image/")); if (f.length && !$("#attach").hidden) { e.preventDefault(); addFiles(f); } });
+  $("#attach").onclick = () => $("#file").click();
+  $("#file").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+  $("#newChat").onclick = newChat;
+  $("#model").onchange = e => selectModel(e.target.value);
+  $("#optTools").onchange = e => { S.tools = e.target.checked; saveS(); };
+  $("#optThink").onchange = e => { S.think = e.target.checked; saveS(); };
+  $("#tabs").onclick = e => { const b = e.target.closest("button"); if (b) showTab(b.dataset.tab); };
+  $("#menu").onclick = () => $("#side").classList.toggle("open");
+  $("#refreshPs").onclick = loadPs;
+  $("#quit").onclick = quit; $("#quit2").onclick = quit;
+  $("#cwdHint").onclick = () => { showTab("settings"); $("#setCwd").focus(); };
+  $("#log").addEventListener("click", e => {
+    const b = e.target.closest(".cp"); if (!b) return;
+    navigator.clipboard.writeText(b.closest(".code").querySelector("code").textContent).then(() => { b.textContent = "copiado ✓"; setTimeout(() => b.textContent = "copiar", 1200); });
+  });
+  $("#pullBtn").onclick = () => pullPush("pull"); $("#pushBtn").onclick = () => pullPush("push");
+  $("#pullName").addEventListener("keydown", e => { if (e.key === "Enter") pullPush("pull"); });
+  $("#createBtn").onclick = createModel;
+  const chips = $("#chips");
+  for (const [c, now, tip] of [["list", 1, "modelos instalados"], ["ps", 1, "modelos en memoria"], ["show ", 0, "info de un modelo"], ["run ", 0, "ejecutar un prompt"], ["pull ", 0, "descargar"], ["push ", 0, "subir"], ["cp ", 0, "copiar"], ["rm ", 0, "eliminar"], ["stop ", 0, "sacar de memoria"], ["create ", 0, "crear (usa -f Modelfile)"], ["signin", 1, "iniciar sesión en ollama.com"], ["signout", 1, "cerrar sesión"], ["--version", 1, "versión"], ["help", 1, "ayuda"]]) {
+    const b = el("button", "", c.trim()); b.type = "button"; b.title = tip;
+    b.onclick = () => { if (now) { $("#conIn").value = c; runConsole(c); } else { $("#conIn").value = c + (["show ", "run ", "stop "].includes(c) && S.model ? S.model + (c === "run " ? ' "hola"' : "") : ""); $("#conIn").focus(); } };
+    chips.append(b);
+  }
+  $("#conForm").onsubmit = e => { e.preventDefault(); runConsole($("#conIn").value); };
+  $("#conClear").onclick = () => { conText = ""; $("#conOut").textContent = ""; };
+  const bind = (id, key, num) => { const i = $(id); i.value = S[key] ?? ""; i.onchange = () => { S[key] = num ? (i.value === "" ? "" : +i.value) : i.value.trim(); saveS(); if (key === "cwd") updHint(); }; };
+  bind("#setCwd", "cwd"); bind("#setSystem", "system"); bind("#setCtx", "ctx", 1); bind("#setTemp", "temp", 1); bind("#setKeep", "keep");
+  $("#clearAll").onclick = () => { if (busy || !confirm("¿Borrar todas las conversaciones guardadas?")) return; chats = []; saveChats(); newChat(); };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") loadPs(); });
+  setInterval(() => { if (document.visibilityState === "visible") loadPs(); }, 8000);
+}
+
+(async function init() {
+  await loadSelf();
+  if (!S.cwd) S.cwd = info.cwd || "";
+  bindUI(); updHint();
+  newChat();
+  await loadModels(); loadPs();
+})();
+</script>
+</body>
+</html>

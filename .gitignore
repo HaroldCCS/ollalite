@@ -1,0 +1,9 @@
+# Binarios compilados (se generan con ./build.sh)
+/ollalite
+/ollalite.exe
+/OllaLite.app/
+
+# Archivos del sistema y locales
+.DS_Store
+*.log
+.env
